@@ -3,9 +3,9 @@
 //      gsmith23@ph.ed.ac.uk   17 07 2015           //
 //==================================================//
 
-void runCsv2Tree(TString inputFileOne   = "no_source_five_mins",
-		 TString inputFileTwo   = "cosmics_two_days",
-		 TString inputFileThree = "Bi207_one_hour",
+void runCsv2Tree_edit(TString inputFile   = "data",
+		      //		 TString inputFileTwo   = "cosmics_two_days",
+		      //		 TString inputFileThree = "Bi207_one_hour",
 		 Float_t spe    = 0.033,
 		 Float_t offset = 0.001){
   
@@ -18,28 +18,28 @@ void runCsv2Tree(TString inputFileOne   = "no_source_five_mins",
   
   // create trees from csv files 
   // and write to output file
-  csv2Tree(inputFileOne);
-  csv2Tree(inputFileTwo);
-  csv2Tree(inputFileThree);
+  csv2Tree(inputFile);
+  //  csv2Tree(inputFileTwo);
+  //  csv2Tree(inputFileThree);
 
   outputFile->Close();
   
   TCanvas * canvasOne = new TCanvas("canvasOne","canvasOne", 800,800);
   
   LoopOverTree(outputFileName,
-	       inputFileOne,
+	       inputFile,
 	       spe,
 	       offset);
 
-  LoopOverTree(outputFileName,
-	       inputFileTwo,
-	       spe,
-	       offset);
+  //  LoopOverTree(outputFileName,
+  //	       inputFileTwo,
+  //	       spe,
+  //	       offset);
 
-  LoopOverTree(outputFileName,
-	       inputFileThree,
-	       spe,
-	       offset);
+  //  LoopOverTree(outputFileName,
+  //	       inputFileThree,
+  //	       spe,
+  //	       offset);
   
   TFile   * outputFile = new TFile(outputFileName,"update");
   
