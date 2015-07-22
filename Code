@@ -1,0 +1,127 @@
+//==================================================//
+// Writes trees and histograms from scope csv data  //
+//      gsmith23@ph.ed.ac.uk   17 07 2015           //
+//==================================================//
+
+void runCsv2Tree(TString inputFileOne   = "no_source_five_mins",
+		 TString inputFileTwo   = "cosmics_two_days",
+		 TString inputFileThree = "Bi207_one_hour",
+		 Float_t spe    = 0.033,
+		 Float_t offset = 0.001){
+  
+  TString outputFileName = "output.root";
+
+  cout << endl;
+  cout << " output file is " << outputFileName << endl;
+
+  TFile   * outputFile = new TFile(outputFileName,"recreate");
+  
+  // create trees from csv files 
+  // and write to output file
+  csv2Tree(inputFileOne);
+  csv2Tree(inputFileTwo);
+  csv2Tree(inputFileThree);
+
+  outputFile->Close();
+  
+  TCanvas * canvasOne = new TCanvas("canvasOne","canvasOne", 800,800);
+  
+  LoopOverTree(outputFileName,
+	       inputFileOne,
+	       spe,
+	       offset);
+
+  LoopOverTree(outputFileName,
+	       inputFileTwo,
+	       spe,
+	       offset);
+
+  LoopOverTree(outputFileName,
+	       inputFileThree,
+	       spe,
+	       offset);
+  
+  TFile   * outputFile = new TFile(outputFileName,"update");
+  
+  canvasOne->Close();    
+
+  outputFile->Close();
+
+}
+
+void csv2Tree(TString inputFileName){
+
+  TString treeName = "tree_" + inputFileName;
+
+  TTree   * tree   = new TTree(treeName,treeName);
+  
+  inputFileName = inputFileName + ".csv";
+  
+  // Read from cvs file into tree
+  // "file name","separated variables","separator type"
+  tree->ReadFile(inputFileName, "voltage:counts",',');
+  
+  cout << endl;
+  cout << " writing tree:  " << treeName << endl;
+  tree->Write();
+}
+
+
+void  LoopOverTree(TString outputFileName,
+		   TString inputFileName,
+		   Float_t spe,
+		   Float_t offset){
+  
+  TString treeName = "tree_" + inputFileName;
+
+  TFile   * outputFile = new TFile(outputFileName,"update");
+
+  TTree* tree = (TTree*) outputFile->Get(treeName);
+  
+  Float_t counts;
+  Float_t voltage;
+  Float_t npe;
+  
+  tree->SetBranchAddress("voltage",&voltage);
+  tree->SetBranchAddress("counts",&counts);
+  
+  Long64_t nentries = tree->GetEntries();
+
+  // find normalisation
+  Float_t Norm = 0.;
+
+  for (Long64_t i = 0; i < nentries ; i++){
+
+    tree->GetEntry(i);
+
+    //    if (counts > 0 && counts < Norm )
+    if (counts > Norm )
+      Norm = counts;
+        
+  }
+    
+  cout << endl;
+  cout << " Normalisation = " << Norm << endl;
+  
+  TString hName = "h_" + inputFileName;
+
+  tree->GetEntry(0);
+  Float_t npeLow = (voltage-offset) /(-spe);
+
+  tree->GetEntry(nentries-1);
+  Float_t npeHigh = (voltage-offset) /(-spe);
+
+  TH1F * h1 =  new TH1F(hName,hName,nentries,npeLow,npeHigh);
+
+  for (Long64_t i = 0; i < nentries ; i++) {
+    tree->GetEntry(i);
+    h1->Fill((voltage-offset)/-spe,counts/Norm);
+  }
+
+
+  h1->Draw();   
+
+  outputFile->Write();
+  outputFile->Close();
+
+}
